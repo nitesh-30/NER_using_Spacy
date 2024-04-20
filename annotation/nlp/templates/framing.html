@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Page Title</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        header {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+        }
+
+        iframe {
+            width: 50%;
+            height: 100%;
+            border: none;
+        }
+
+        .content {
+            width: 50%;
+            overflow: auto;
+            padding: 20px;
+            border: 1px solid #ddd; /* Added border style */
+            border-radius: 5px;
+            background-color: #fff; /* Added background color */
+            margin: 10px; /* Adjusted margin to reduce space */
+        }
+
+        .content h2 {
+            color: #007BFF;
+        }
+
+        .content p {
+            line-height: 1.6;
+        }
+
+        .content a {
+            color: #007BFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .content a:hover {
+            text-decoration: underline;
+        }
+
+        #showtext-content {
+            border: 1px solid #ddd; /* Added border style */
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 10px; /* Adjusted margin to reduce space */
+            background-color: #fff; /* Added background color */
+        }
+    </style>
+</head>
+<body>
+
+<div class="content">
+    {% include 'display_file_content2.html' with file_content=file_content unique_entity_labels=unique_entity_labels %}
+</div>
+
+<div class="content" id="showtext-content">
+    <!-- The content fetched from the showtext URL will be displayed here -->
+</div>
+
+<script>
+    // Fetch data from the showtext URL and update the second div
+    fetch('/showtext/')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('showtext-content').innerHTML = data;
+        })
+        .catch(error => console.error('Error fetching data:', error));
+</script>
+
+</body>
+</html>

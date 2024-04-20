@@ -1,0 +1,360 @@
+<!-- display_file_content.html -->
+<!--{% csrf_token %}-->
+<!DOCTYPE html>
+{% csrf_token %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display File Content</title>
+    <style>
+        .content-box {
+            width: 50vw;
+            margin: 10px 5px 10px 100px;
+            /* top right bottom left */
+            padding: 10px;
+            border: 1px solid #ccc;
+            overflow: auto;
+            margin-bottom: 20px;
+            /* Add some bottom margin between boxes */
+        }
+
+        .user-box {
+            margin-top: 10px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+
+        tag {
+            display: inline-block;
+            padding: 8px 16px;
+            margin-right: 5px;
+            cursor: pointer;
+            color: white;
+            background-color: blueviolet;
+            border: 1px solid blue;
+            border-radius: 4px;
+            text-decoration: none;
+            text-align: center;
+            font-size: 18px;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            /* Adjust the font size as needed */
+        }
+
+        tag:hover {
+            background-color: darkblue;
+            text-decoration: underline;
+        }
+
+        .selected-word {
+            background-color: #ff0000;
+            /* Green */
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        .user-input {
+            flex-grow: 0.5;
+            /* Adjust the width as needed */
+            max-width: 100px;
+            /* Add a maximum width to prevent it from growing too much */
+            margin-right: 5px;
+        }
+
+        .buttons-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .buttons-container button {
+            margin-left: 5px;
+        }
+
+        .saved-content {
+            margin-top: 20px;
+        }
+         button {
+        padding: 10px 15px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #4CAF50; /* Green background color */
+        color: white; /* White text color */
+        border: none; /* Remove borders */
+        border-radius: 5px; /* Optional: Rounded corners */
+        transition: background-color 0.3s ease; /* Smooth color transition */
+        margin: 5px; /* Add some margin for spacing */
+    }
+
+    button:hover {
+        background-color: #45a049; /* Darker green color on hover */
+    }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+
+<body>
+    <div class="user-boxes">
+        <!-- User Boxes will be added here dynamically -->
+
+    </div>
+    <button onclick="addUserBox(); this.onclick=null;">Add tags</button>
+    <h2>File Content</h2>
+    <div class="content-box" id="fileContent">
+        <!-- Display the file content paragraph-wise here -->
+    </div>
+    <button onclick="nextParagraph()">Next</button>
+    <button onclick="skipParagraph()">Skip</button>
+
+
+    <!-- Clicked words display -->
+    <div class="clicked-words-list">
+        <h3>Clicked Words With Selected Tags</h3>
+        <ul id="currentParagraphWordsList"></ul>
+    </div>
+
+    <button onclick="sendData()">Send All Data</button>
+
+    <script>
+        const fileContent = `{{ file_content }}`;
+        const paragraphs = fileContent.split(/\r?\n/);
+
+
+        let currentParagraphIndex = 0;
+        const fileContentDisplay = document.getElementById('fileContent');
+        const savedList = document.getElementById('savedList');
+        const allAddedTagsList = document.getElementById('allAddedTagsList');
+
+        let selectedWord = '';
+        const wordDictionary = {};
+        const clickedTags = []; // Store clicked tags for the current paragraph
+        const addedTags = []; // Store all added tags
+
+        //Display the paragraph to select words and tags on the current page
+        function displayParagraph(index) {
+            fileContentDisplay.innerHTML = '<p>' + paragraphs[index].split(' ').map(word => `<span class="word">${word}</span>`).join(' ') + '</p>';
+            addClickListenersToWords();
+        }
+
+        function nextParagraph() {
+            currentParagraphIndex = (currentParagraphIndex + 1) % paragraphs.length;
+            displayParagraph(currentParagraphIndex);
+            // clearClickedWordsList(); // Clear clicked words for the new paragraph
+            // clearClickedTagsList(); // Clear clicked tags for the new paragraph
+        }
+
+        function skipParagraph() {
+            nextParagraph();
+        }
+
+        function addUserBox() {
+            const userBoxes = document.querySelector('.user-boxes');
+            const userBox = document.createElement('div');
+            userBox.classList.add('user-box');
+
+            const userInput = document.createElement('input');
+            userInput.classList.add('user-input');
+            userInput.type = 'text';
+            userInput.placeholder = 'Enter content';
+
+            const addButton = document.createElement('button');
+            addButton.textContent = 'Add';
+            addButton.addEventListener('click', function () {
+                const content = userInput.value;
+                if (content.trim() !== '') {
+                    const contentDisplay = document.createElement('tag');
+                    contentDisplay.classList.add('tag');
+                    contentDisplay.textContent = content;
+
+                    contentDisplay.addEventListener('click', function () {
+                        console.log('Tag clicked:', content);  // Show tag clicked
+                        console.log('Word for the tag clicked', selectedWord);
+                        const clickedWordsList = document.getElementById('currentParagraphWordsList');
+                        const clickedWordItem = document.createElement('li');
+                        clickedWordItem.textContent = selectedWord + '--' + content;
+                        clickedWordsList.appendChild(clickedWordItem);
+                        appendClickedTag(content, selectedWord);
+                    });
+
+                    userBox.appendChild(contentDisplay);
+                    userInput.value = '';
+
+                    // Store the added tag
+                    addedTags.push(content);
+                }
+            });
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete Last Tag';
+            deleteButton.addEventListener('click', function () {
+                const tags = userBox.getElementsByClassName('tag');
+                if (tags.length > 0) {
+                    const lastTag = tags[tags.length - 1].textContent;
+                    tags[tags.length - 1].remove();
+                    // removeClickedTag(lastTag);
+
+                    // Remove the last added tag from the list
+                    const lastAddedTag = addedTags.pop();
+                    console.log('Removed last added tag:', lastAddedTag);
+                }
+            });
+
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.classList.add('buttons-container');
+            buttonsContainer.appendChild(addButton);
+            buttonsContainer.appendChild(deleteButton);
+
+            userBox.appendChild(userInput);
+            userBox.appendChild(buttonsContainer);
+
+            userBoxes.appendChild(userBox);
+        }
+
+        function saveContent() {
+            const currentContent = fileContentDisplay.textContent;
+
+            // Display saved content
+            const savedContentItem = document.createElement('li');
+            savedContentItem.textContent = currentContent;
+            savedList.appendChild(savedContentItem);
+
+            // Save the selected word and associated tags in the dictionary
+            if (selectedWord && userBoxHasTags()) {
+                wordDictionary[selectedWord] = getUserBoxTags();
+                const obj = Object.fromEntries(clickedTags.map(([v, k]) => [v, k]));
+                console.log(obj)
+                console.log('Dictionary:', wordDictionary);
+            }
+
+            // Display added tags
+            const addedTagsList = document.getElementById('addedTagsList');
+            const addedTags = getUserBoxTags();
+            addedTags.forEach(tag => {
+                const tagItem = document.createElement('li');
+                tagItem.textContent = tag;
+                addedTagsList.appendChild(tagItem);
+            });
+
+
+
+            // Reset selected word and user box
+            selectedWord = '';
+            nextParagraph();
+
+        }
+
+        function userBoxHasTags() {
+            const userBox = document.querySelector('.user-box');
+            return userBox && userBox.getElementsByClassName('tag').length > 0;
+        }
+
+        function getUserBoxTags() {
+            const tags = [];
+            const tagElements = document.querySelectorAll('.tag');
+            tagElements.forEach(tagElement => tags.push(tagElement.textContent));
+            return tags;
+        }
+
+        function clearUserBox() {
+            const userBox = document.querySelector('.user-box');
+            if (userBox) {
+                userBox.innerHTML = '';
+            }
+        }
+
+        function addClickListenersToWords() {
+            const wordElements = document.querySelectorAll('.word');
+            wordElements.forEach(wordElement => {
+                wordElement.addEventListener('click', function () {
+                    selectedWord = wordElement.textContent;
+
+                    console.log('Selected Word:', selectedWord); // Shows selected word
+
+                    // Toggle color
+                    wordElement.classList.toggle('selected-word');
+
+                    // Append the clicked word to the list
+                    // appendClickedWord(selectedWord);
+                });
+            });
+        }
+
+
+
+        function appendClickedTag(tag, word) {
+            clickedTags.push([word, tag]);
+            console.log(clickedTags)
+            updateClickedTagsList();
+        }
+
+
+
+
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+
+        function sendData() {
+            console.log(clickedTags)
+
+            $.ajax({
+            type: 'POST',
+            url: '/process_data/',  // Replace with your actual URL
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(Object.fromEntries(clickedTags.map(([v, k]) => [v, k]))),
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            },
+          success: function (data) {
+    console.log(data);
+    alert("ALL words and tags sent for training");
+
+    // Display the buttons after the user clicks "OK"
+    document.getElementById('trainModelLink').style.display = 'inline';
+    document.getElementById('uploadFileLink').style.display = 'inline';
+},
+            error: function (error) {
+                console.error(error);
+                // Handle error response
+            }
+        });
+    }
+
+
+
+    </script>
+
+    <!-- ... (remaining HTML code) ... -->
+<a href="{% url 'trainmodel' %}" id="trainModelLink" style="display: none;">
+    <button type="button">Train Model</button>
+</a>
+<a href="{% url 'file_upload2' %}" id="uploadFileLink" style="display: none;">
+    <button type="button">Upload File</button>
+</a>
+
+</body>
+
+</html>

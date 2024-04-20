@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Models</title>
+
+    <style>
+        /* Add some basic styles for buttons */
+        button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+
+        /* Style for the 'Train Model' button */
+        #trainButton {
+            background-color: #4CAF50; /* Green */
+        }
+    </style>
+</head>
+<body>
+
+<form method="post" action="{% url 'showmodel' %}">
+    {% csrf_token %}
+
+    {% if model_names %}
+        <div style="display: flex; flex-wrap: wrap;">
+            {% for category, names in model_names.items %}
+                <h3>{{ category }}</h3>
+                {% for model_name in names %}
+                    <button id="mod_name" style="color: black;" type="button" onclick="sendName('{{ model_name }}')" name="selected_model" value="{{ model_name }}">
+                        {{ model_name }}
+                    </button>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No model names exist.</p>
+    {% endif %}
+
+    <button type="button" onclick="openNewModelPrompt()">New Model</button>
+</form>
+
+<a href="{% url 'file_list' %}">
+    <button id="trainButton" type="button">Display</button>
+</a>
+
+
+<script>
+    function openNewModelPrompt() {
+        var modelName = prompt("Enter the new model name:");
+        if (modelName) {
+            window.location.href = "{% url 'storemodelname' %}?model_name=" + modelName;
+        }
+    }
+        function sendName(name) {
+        window.location.href = "{% url 'storemodelname' %}?model_name=" + name;
+    }
+
+    
+</script>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!-- file_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uploaded Files</title>
+
+    <!-- Add some basic CSS for styling -->
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        form {
+            margin-left: 10px;  /* Adjust the spacing between file name and buttons */
+        }
+
+        button {
+            margin-left: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .delete-button {
+            background-color: #ff5252;  /* Red color for delete button */
+        }
+
+        .delete-button:hover {
+            background-color: #c50f0f;
+        }
+    </style>
+</head>
+<body>
+  <h2>Uploaded Files</h2>
+  <ul>
+    {% for file in files %}
+      <li>
+        {{ file.file.name }}
+        <!-- Add a form for each file with styled display and delete buttons -->
+        <form action="{% url 'display_last_file' %}" method="get">
+          <input type="hidden" name="file_name" value="{{ file.file.name }}">
+          <button type="submit">Display</button>
+        </form>
+        <form action="{% url 'delete_file' %}" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="file_name" value="{{ file.file.name }}">
+          <button type="submit" class="delete-button">Delete</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+<a href="{% url 'file_upload' %}">
+        <button type="button">Upload file</button>
+    </a>
+</body>
+</html>

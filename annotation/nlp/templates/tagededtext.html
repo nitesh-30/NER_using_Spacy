@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entity Recognition Results</title>
+    <!-- Add any additional styles or scripts here -->
+</head>
+<body>
+    <h1 class="text-center">Entity Recognition Results</h1>
+    <div class="container">
+        {% if html %}
+            {{ html | safe }}
+        {% else %}
+            <p>No entity information available.</p>
+        {% endif %}
+    </div>
+    <!-- Add any additional scripts or footer content here -->
+</body>
+
+</html>
